@@ -499,7 +499,7 @@ class WalletNode:
     async def perform_atomic_rollback(self, fork_height: int, cache: Optional[PeerRequestCache] = None):
         self.log.info(f"perform_atomic_rollback to {fork_height}")
         # this is to start a write transaction
-        async with self.wallet_state_manager.db_wrapper.write_db():
+        async with self.wallet_state_manager.db_wrapper.new_transaction():
             try:
                 removed_wallet_ids = await self.wallet_state_manager.reorg_rollback(fork_height)
                 await self.wallet_state_manager.blockchain.set_finished_sync_up_to(fork_height, in_rollback=True)
@@ -683,8 +683,7 @@ class WalletNode:
                         if await self.validate_received_state_from_peer(inner_state, peer, cache, fork_height)
                     ]
                     if len(valid_states) > 0:
-                        # this is to start a write transaction
-                        async with self.wallet_state_manager.db_wrapper.write_db():
+                        async with self.wallet_state_manager.db_wrapper.new_transaction():
                             self.log.info(
                                 f"new coin state received ({inner_idx_start}-"
                                 f"{inner_idx_start + len(inner_states) - 1}/ {len(items)})"
@@ -728,8 +727,7 @@ class WalletNode:
                 await asyncio.gather(*all_tasks)
                 return False
             if trusted:
-                # this is to start a write transaction
-                async with self.wallet_state_manager.db_wrapper.write_db():
+                async with self.wallet_state_manager.db_wrapper.new_transaction():
                     try:
                         self.log.info(f"new coin state received ({idx}-" f"{idx + len(states) - 1}/ {len(items)})")
                         await self.wallet_state_manager.new_coin_state(states, peer, fork_height)

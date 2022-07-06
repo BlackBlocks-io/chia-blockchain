@@ -2245,7 +2245,7 @@ class FullNode:
                 new_block = dataclasses.replace(block, challenge_chain_ip_proof=vdf_proof)
         if new_block is None:
             return False
-        async with self.db_wrapper.write_db():
+        async with self.db_wrapper.new_transaction():
             try:
                 await self.block_store.replace_proof(header_hash, new_block)
                 return True
